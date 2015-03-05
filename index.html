@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html ng-app="parcel-map-example">
+
+<head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Parcel Map</title>
+
+    <!-- load bootstrap css -->
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- load Esri CSS -->
+    <link rel="stylesheet" type="text/css" href="http://js.arcgis.com/3.12/esri/css/esri.css">
+
+    <!-- custom styles for this app -->
+    <style type="text/css">
+        .map {
+            margin-bottom: 10px;
+        }
+        .map-col {
+            padding-left: 0;
+            padding-right: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- page header -->
+        <div class="row header">
+            <h3 class="text-muted">Parcel Map</h3>
+        </div>
+
+        <!-- map row -->
+        <div class="row" ng-controller="ParcelController">
+            <div class="col-md-3">
+                <form>
+                    <div class="form-group">
+                        <label>Parcel ID:
+                            <input type="text" class="form-control" ng-model="temp.parcelId" />
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary" ng-click="selectParcel()">Select</button>
+                    <button class="btn btn-default" ng-click="clearSelectedParcel()">Clear</button>
+                </form>
+                <h4>Parcel Details</h4>
+                <p ng-hide="parcel.attributes.PARCELID">Select a parcel by ID to see it on the map and get parcel details.</p>
+                <div ng-show="parcel.attributes.PARCELID">
+                    <p>{{parcel.attributes.PSTLADDRESS}}
+                    <br>{{parcel.attributes.PSTLCITY}}, {{parcel.attributes.PSTLSTATE}} {{parcel.attributes.PSTLZIP5}}</p>
+                    <p>{{parcel.attributes.PRPRTYDSCRP}}</p>
+                    <p>Type: {{parcel.attributes.RESSTRTYP}}</p>
+                    <p>Built: {{parcel.attributes.RESYRBLT}}</p>
+                </div>
+            </div>
+            <div class="col-md-9 map-col">
+                <parcel-map id="map" parcel-id="{{parcel.id}}" selection-complete="parcelSelected"></parcel-map>
+            </div>
+        </div>
+        <div class="row">
+            <h2>About this Example</h2>
+            <p>An example of how to roll your own directive with an Esri map based on the directives found in <a href="https://github.com/Esri/angular-esri-map">Esri's module for AngularJS</a>.
+            <p>The directive is declared on the page as:</p>
+            <pre><code>&lt;parcel-map id="map" parcel-id="<span>{</span>{parcel.id}}" selection-complete="parcelSelected">&lt;/parcel-map></code></pre>
+            <p>As other controls update the scope's <code>parcel.id</code>, the directive sets the selected parcel on the map.</p>
+            <p>The directive also exposes a <code>selection-complete</code>event, which returns the selected features. The controller listens for this event and display the details of the currently selected parcel.</p>
+            <p>This example uses services and some code from the <a href="https://developers.arcgis.com/javascript/jssamples/exp_history.html">History API to track selected feature sample page</a>.</p>
+        </div>
+    </div><!-- /container -->
+
+    <!-- load Esri JavaScript API -->
+    <script type="text/javascript" src="http://js.arcgis.com/3.12compact"></script>
+
+    <!-- load Angular -->
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular.js"></script>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular-route.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular-sanitize.js"></script>
+
+    <!-- load this app -->
+    <script type="text/javascript" src="parcels/parcelMap.js"></script>
+    <script>
+        'use strict';
+        angular.module('parcel-map-example')
+            .controller('ParcelController', function ($scope) {
+                // model for selected parcel
+                $scope.parcel = {
+                    id: '',
+                    attributes: {}
+                };
+
+                // use a temp variable to prevent
+                // map from over-querying until
+                // user clicks Select
+                $scope.temp = {
+                    parcelId: '1919377002'
+                };
+
+                // map is bound to parcel id and will
+                // select it as soon as it is set
+                $scope.selectParcel = function() {
+                    $scope.parcel.id =$scope.temp.parcelId;
+                };
+                $scope.clearSelectedParcel = function() {
+                    $scope.parcel.id = '';
+                    $scope.parcel.attributes = {};
+                };
+
+                // show parcel details after it
+                // has been selected on the map
+                $scope.parcelSelected = function(e) {
+                    var features = e.features;
+                    if (features && features.length > 0) {
+                        $scope.parcel.attributes = features[0].attributes;
+                    } else {
+                        $scope.parcel.attributes = {};
+                    }
+                };
+            });
+    </script>
+</body>
+
+</html>
